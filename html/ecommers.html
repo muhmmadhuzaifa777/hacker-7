@@ -1,8 +1,8 @@
+https://meet.google.com/rko-xjoh-vcv
 <html>
     <head>
         <title>First Class Html</title>
-        <link rel='icon' type='image/png' href='simple-twitter-16x16-icon-png-7.png' />
-        <link rel='stylesheet' href='style.css' />
+        <link rel='stylesheet' href='task.css' />
         <style>
             .discount-price {
                 text-decoration: line-through;
@@ -16,6 +16,15 @@
                 display: flex;
                 align-items: center;
             }
+
+        /* Style for radio buttons */
+        input[type="radio"] {
+            accent-color: rgb(0, 98, 255); /* This sets the color of the radio button */
+        }
+
+        .paymentLabel input[type="radio"] {
+            margin-right: 10px; /* Add some space between the radio button and the label */
+        }
  
         </style>
     </head>
@@ -81,6 +90,28 @@
         </div>
       </body>
     <script>
+           var initialCheckoutForm = {
+            first_name: '',
+            last_name: '',
+            phone_number: 0,
+            address: '',
+            email: '',
+            postal_code: '',
+            city: '',
+            country: '',
+            payment_method: '',
+            shipping_details: {
+                address:'',
+                city: '',
+                postal_code: '',
+                country: '',
+                phone_number: '',
+                reciever_name: ''
+            },
+            total_amount: '',
+            cart_details: [],
+        }
+
         var checkoutForm = {
             first_name: '',
             last_name: '',
@@ -108,8 +139,8 @@
                 id: 1,
                 name: 'water bottle',
                 description: 'color: blue size: large',
-                price: 100,
-                discounted_price: 99,
+                price: 350,
+                discounted_price: 299,
             },
             {
                 id: 2,
@@ -122,8 +153,8 @@
                 id: 3,
                 name: 'watch',
                 description: 'color: black, watch type: smart, brand: apple',
-                price: 5000,
-                discounted_price: 4999,
+                price: 9000,
+                discounted_price: 7999,
             },
             {
                 id: 4,
@@ -136,41 +167,74 @@
                 id: 5,
                 name: 'shoes',
                 description: 'size: 8, color blue, type: sports wear',
-                price: 3000,
-                discounted_price: 3000,
+                price: 5000,
+                discounted_price: 4700,
             },
         ];
  
         renderProducts();
  
         function validateFields() {
-            debugger;
-            // const basicValidation = () => {
-            //     var checkValidation = true;
-            //     basicFields.forEach((x)=> {
-            //         if(document.getElementById(x).value == '' || document.getElementById(x).value == null) {
-            //             checkValidation = false;
-            //             document.getElementById('taskErrorField-'+x).hidden = false
-            //         }
-            //     })
-            //     return checkValidation
-            // }
-            // var basicFields = [
-            //     'first_name',
-            //     'last_name',
-            //     'address',
-            //     'postal_code'
-            // ]
- 
-            // var testBasicValidation = basicValidation();
-            // if(!testBasicValidation) {
-            //     return false
-            // }
-            // const mobileRegex = /^(\+92|92|033|03)[ -]*\d{3}[ -]*\d{7}$/;
-            // if (!mobileRegex.test(document.getElementById('number').value)) {
-            //     document.getElementById('taskErrorField-number').hidden = false
-            //     return false
-            // }
+            var basicFields = [
+                'first_name',
+                'last_name',
+                'address',
+                'postal_code'
+            ]
+
+            const basicValidation = () => {
+                var checkValidation = true;
+                basicFields.forEach((x)=> {
+                    if(document.getElementById(x).value == '' || document.getElementById(x).value == null) {
+                        checkValidation = false;
+                        document.getElementById('taskErrorField-'+x).hidden = false
+                    } else {
+                        document.getElementById('taskErrorField-'+x).hidden = true
+                    }
+                })
+                return checkValidation
+            }
+            
+
+            var testBasicValidation = basicValidation();
+            if(!testBasicValidation) {
+                return false
+            }
+
+            const validatePhoneNumber = (phoneNumber) => {
+                const regex = /^(\+92|92|0)[ -]*\d{2,4}[ -]*\d{7,10}$/
+                return regex.test(phoneNumber);
+            }
+
+            if (!validatePhoneNumber(document.getElementById('number').value)) {
+                document.getElementById('taskErrorField-number').hidden = false
+                return false
+            } else {
+                document.getElementById('taskErrorField-number').hidden = true
+            }
+
+            const validateEmail = (email) => {
+                const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                return regex.test(email);
+            }
+
+            if(!validateEmail(document.getElementById('email').value)) {
+                document.getElementById('taskErrorField-email').hidden = false;
+                return false;
+            } else {
+                document.getElementById('taskErrorField-email').hidden = true;
+            }
+
+          
+            if(checkoutForm.cart_details.length == 0) {
+                alert("Please add items in your cart first");
+            
+                return false
+            }
+
+            return true
+        
+
             if(email) {
  
             }
@@ -268,15 +332,25 @@
         //   // document.getElementById('checkoutForm').submit();
         // }
  
- 
-        }
- 
+
+        }   
+        
+
+
         function sumbitCheckout() {
             debugger;
-            validateFields();
+            const checkForm = validateFields();
+            if(checkForm) {
+                alert("Thank you for shopping with us");
+                checkoutForm = initialCheckoutForm;
+                document.getElementById('ecommerceForm').reset();
+                renderCarts();
+            }
         }
- 
- 
+
+
+      
+
         function addToCart(product) {
             debugger;
             var currentProduct = products.find((x) => { return x.id == product });
@@ -308,6 +382,15 @@
  
             renderCarts();
         }
+        function showTotalAmount(price, quantity) {
+  return price * quantity;
+}
+
+// Example Usage
+let price = 5;
+let quantity = 2;
+let result = showTotalAmount(price, quantity);
+console.log(result); // 10      
  
  
         function renderCarts() {
@@ -341,11 +424,54 @@
             });
             cartDiv.innerHTML = cartHtml;
         }
+
+        function renderCarts() {
+    let cartHtml = '';
+    let totalAmount = 0;
+    var cartDiv = document.getElementById('boxList');
+
+
+    checkoutForm.cart_details.forEach((x) => {
+        var priceBox = x.discounted_price < x.price ? `<div class='actual-price'>
+                <span class='discount-price'> `+x.price+`</span>
+                `+x.discounted_price+`
+            </div>` : `<div class='actual-price'>
+                `+x.price+`
+            </div>` ;
+
+        // Calculate the total amount for each item
+        const itemTotal = showTotalAmount(x.discounted_price < x.price ? x.discounted_price : x.price, x.quantity);
+        totalAmount += itemTotal;
+
+        cartHtml += `<div class="box" style="background-color: aqua;">
+            <div style="padding-left:10px; border-radius: 50%; padding-right: 10px; display:flex; justify-content: space-between; align-items: center;">
+                <p>`+ x.name +`</p>
+                `+ priceBox +`
+                <div>
+                    Quantity `+ x.quantity +`
+                </div>
+                <div>
+                    <button onclick="removeItemCart(`+ x.id +`)">
+                        X
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    });
+
+    // Add total amount to the HTML
+    cartHtml += `<div class="total-amount" style="padding: 10px; font-size: 18px; font-weight: bold; background-color: #f0f0f0;">
+        Total Amount: ` + totalAmount + `
+    </div>`;
+
+    cartDiv.innerHTML = cartHtml;
+
+}
  
+
         function renderProducts() {
             let productHtml = '';
             var productDiv = document.getElementById('main');
- 
  
             products.forEach((x) => {
                 var priceBox = x.discounted_price < x.price ? `<div class='actual-price'>
@@ -369,6 +495,25 @@
             });
             productDiv.innerHTML = productHtml;
         }
- 
+
+    function addToCart(product) {
+        var currentProduct = products.find((x) => x.id === product);
+        var currentQty = document.getElementById('qty'+product).value || 1;
+        var cartExistIndex = checkoutForm.cart_details.findIndex((x)=> x.id === product);
+        if(cartExistIndex !== -1) {
+            checkoutForm.cart_details[cartExistIndex].quantity += parseInt(currentQty);
+        } else {                
+            var cartItem = { ...currentProduct, quantity: currentQty };
+            checkoutForm.cart_details.push(cartItem);
+        }
+        document.getElementById('qty'+product).value = '';
+        renderCarts();
+    }
+
+    function removeItemCart(id) {
+        var proIndex = checkoutForm.cart_details.findIndex((x) => x.id === id);
+        checkoutForm.cart_details.splice(proIndex, 1);
+        renderCarts();
+    }
     </script>
 </html>
