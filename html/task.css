@@ -1,8 +1,18 @@
+
+
+/* Style for radio buttons */
+input[type="radio"] {
+  accent-color: rgba(0, 110, 255, 0.986); /* This sets the color of the radio button */
+  }
+  
+  .paymentLabel input[type="radio"] {
+  margin-right: 10px; /* Add some space between the radio button and the label */
+  }
+
 label {
     font-size: 20px;
   }
 
-   kma is the puppler schools
   h1 {
     margin: 0;
   }
@@ -18,7 +28,6 @@ label {
   }
 
   #header {
-    background: red;
     height: 80px;
     display: flex;
     align-items: center;
@@ -33,7 +42,6 @@ label {
   }
 
   #sidebar {
-    background: green;
     width: 300px;
     padding: 20px;
     box-sizing: border-box;
