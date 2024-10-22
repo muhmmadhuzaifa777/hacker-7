@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Stock Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        .input-field {
+            width: 300px;
+        }
+        .highlight {
+            background-color: yellow;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Advanced Stock Management</h1>
+
+<!-- Stock Entry Form -->
+<form id="stockForm">
+    <label for="productName">Product Name:</label>
+    <input class="input-field" type="text" id="productName" required><br><br>
+
+    <label for="quantity">Quantity:</label>
+    <input class="input-field" type="number" id="quantity" min="1" required><br><br>
+
+    <label for="price">Price:</label>
+    <input class="input-field" type="number" id="price" min="0" step="0.01" required><br><br>
+
+    <!-- Date Added Picker -->
+    <label for="dateAdded">Date Added:</label>
+    <input class="input-field" type="date" id="dateAdded" required><br><br>
+
+    <button type="submit">Add to Stock</button>
+    <span id="errorMessage" class="error"></span>
+    <span id="successMessage" class="success"></span>
+</form>
+
+<!-- Total Value and Quantity -->
+<h3>Total Stock Value: <span id="totalValue">0.00</span></h3>
+<h4>Total Quantity: <span id="totalQuantity">0</span></h4>
+
+<!-- Sort Controls -->
+<h2>Current Stock</h2>
+<div>
+    <button onclick="sortStockBy('date')">Sort by Date Added</button>
+    <button onclick="sortStockBy('price')">Sort by Price</button>
+    <button onclick="sortStockBy('quantity')">Sort by Quantity</button>
+</div>
+
+<!-- Stock Table -->
+<table id="stockTable">
+    <thead>
+        <tr>
+            <th>Product Name</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Date Added</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Stock items will appear here -->
+    </tbody>
+</table>
+
+<button onclick="clearStock()">Clear All Stock</button>
+<h2>Export / Import Stock</h2>
+<button onclick="exportStock()">Export to CSV</button>
+<input type="file" id="importFile" onchange="importStock(event)">
+
+<script>
+    const stockForm = document.getElementById('stockForm');
+    const stockTable = document.getElementById('stockTable').getElementsByTagName('tbody')[0];
+    const errorMessage = document.getElementById('errorMessage');
+    const successMessage = document.getElementById('successMessage');
+    const totalValueElem = document.getElementById('totalValue');
+    const totalQuantityElem = document.getElementById('totalQuantity');
+    
+    let stockItems = [];
+
+    window.onload = function() {
+        loadStockItems();
+    };
+
+    function loadStockItems() {
+        const storedStock = JSON.parse(localStorage.getItem('stockItems')) || [];
+        stockItems = storedStock;
+        storedStock.forEach(item => addRowToTable(item));
+        updateTotalValue();
+        updateTotalQuantity();
+    }
+
+    function addRowToTable(item) {
+        const newRow = stockTable.insertRow();
+        const cell1 = newRow.insertCell(0);
+        const cell2 = newRow.insertCell(1);
+        const cell3 = newRow.insertCell(2);
+        const cell4 = newRow.insertCell(3);
+        const cell5 = newRow.insertCell(4);
+
+        cell1.textContent = item.productName;
+        cell2.textContent = item.quantity;
+        cell3.textContent = item.price.toFixed(2);  // No "$" sign here
+        cell4.textContent = item.dateAdded;
+
+        createActionButtons(newRow, item);
+    }
+
+    function createActionButtons(row, item) {
+        const editButton = document.createElement('button');
+        editButton.textContent = 'Edit';
+        editButton.onclick = function() {
+            editItem(row.rowIndex - 1, item);
+        };
+        row.cells[4].appendChild(editButton);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.onclick = function() {
+            deleteItem(row.rowIndex - 1);
+        };
+        row.cells[4].appendChild(deleteButton);
+    }
+
+    function updateTotalValue() {
+        let totalValue = 0;
+        const rows = stockTable.rows;
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const total = parseFloat(row.cells[2].textContent) * parseInt(row.cells[1].textContent);
+            totalValue += total;
+        }
+        totalValueElem.textContent = totalValue.toFixed(2);  // No "$" symbol
+    }
+
+    function updateTotalQuantity() {
+        let totalQuantity = 0;
+        const rows = stockTable.rows;
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const quantity = parseInt(row.cells[1].textContent);
+            totalQuantity += quantity;
+        }
+        totalQuantityElem.textContent = totalQuantity;
+    }
+
+    function editItem(index, item) {
+        document.getElementById('productName').value = item.productName;
+        document.getElementById('quantity').value = item.quantity;
+        document.getElementById('price').value = item.price;
+        document.getElementById('dateAdded').value = item.dateAdded;
+        deleteItem(index, true);
+    }
+
+    function deleteItem(index, isEditing = false) {
+        stockItems.splice(index, 1);
+        localStorage.setItem('stockItems', JSON.stringify(stockItems));
+
+        stockTable.deleteRow(index);
+        updateTotalValue();
+        updateTotalQuantity();
+
+        if (!isEditing) {
+            displayMessage('Item deleted successfully!', 'success');
+        }
+    }
+
+    function displayMessage(message, type) {
+        if (type === 'success') {
+            successMessage.textContent = message;
+            setTimeout(() => { successMessage.textContent = ''; }, 2000);
+        } else {
+            errorMessage.textContent = message;
+            setTimeout(() => { errorMessage.textContent = ''; }, 2000);
+        }
+    }
+
+    stockForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const productName = document.getElementById('productName').value.trim();
+        const quantity = document.getElementById('quantity').value;
+        const price = document.getElementById('price').value;
+        const dateAdded = document.getElementById('dateAdded').value;
+
+        if (!productName || quantity <= 0 || price <= 0 || !dateAdded) {
+            displayMessage("Please enter valid values!", 'error');
+            return;
+        }
+
+        const item = {
+            productName,
+            quantity: parseInt(quantity),
+            price: parseFloat(price),
+            dateAdded: dateAdded
+        };
+
+        addRowToTable(item);
+
+        stockItems.push(item);
+        localStorage.setItem('stockItems', JSON.stringify(stockItems));
+
+        stockForm.reset();
+        displayMessage("Item added successfully!", 'success');
+
+        updateTotalValue();
+        updateTotalQuantity();
+    });
+
+    function clearStock() {
+        const confirmation = confirm("Are you sure you want to clear all stock?");
+        if (confirmation) {
+            localStorage.removeItem('stockItems');
+            stockTable.innerHTML = "";
+            updateTotalValue();
+            updateTotalQuantity();
+            displayMessage("All stock cleared!", 'success');
+        }
+    }
+
+    function sortStockBy(key) {
+        const sortedItems = [...stockItems];
+        sortedItems.sort((a, b) => {
+            if (key === 'date') {
+                return new Date(a.dateAdded) - new Date(b.dateAdded);
+            } else if (key === 'price') {
+                return a.price - b.price;
+            } else if (key === 'quantity') {
+                return a.price - b.price;
+            } else if (key === 'quantity') {
+                return a.quantity - b.quantity;
+            }
+        });
+
+        stockTable.innerHTML = "";
+        sortedItems.forEach(item => addRowToTable(item));
+        stockItems = sortedItems;
+        updateTotalValue();
+        updateTotalQuantity();
+    }
+    function exportStock() {
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Product Name,Quantity,Price,Total,Date Added\n";
+    stockItems.forEach(item => {
+        const row = `${item.productName},${item.quantity},${item.price},${item.quantity * item.price},${item.dateAdded}`;
+        csvContent += row + "\n";
+    });
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'stock_items.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function importStock(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        const csvData = e.target.result.split("\n").map(row => row.split(","));
+        csvData.forEach(row => {
+            const item = {
+                productName: row[0],
+                quantity: parseInt(row[1]),
+                price: parseFloat(row[2]),
+                dateAdded: row[4]
+            };
+            stockItems.push(item);
+            addRowToTable(item);
+        });
+    };
+    
+    reader.readAsText(file);
+}
+</script>
+
+</body>
+</html>
