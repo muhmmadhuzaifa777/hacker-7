@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Management</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; display: flex; }
+        .sidebar { 
+            width: 200px; 
+            background-color: #f9f9f9; 
+            padding: 20px; 
+            border-right: 1px solid #ddd; 
+        }
+        .sidebar h2 { 
+            font-size: 24px; 
+            margin: 0 0 20px; 
+            cursor: pointer; 
+        }
+        .separator {
+            border-bottom: 1px solid #ddd; 
+            margin-bottom: 20px; 
+        }
+        .sidebar a { 
+            text-decoration: none; 
+            color: #333; 
+            padding: 10px 0; 
+            display: block; 
+        }
+        .sidebar a:hover { 
+            background-color: #eee; 
+        }
+        .main { 
+            flex-grow: 1; 
+            padding: 20px; 
+            display: none; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 8px; 
+        }
+        th { 
+            background-color: #f2f2f2; 
+        }
+        .add-product {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .add-product h3 {
+            margin: 0 0 10px;
+            font-size: 18px;
+            color: #333;
+        }
+        .add-product div {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        input[type="text"], input[type="number"], input[type="date"] {
+            flex: 1; 
+            padding: 6px;
+            margin-right: 5px;
+            font-size: 12px;
+        }
+        button {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2 onclick="toggleMenu()">Menu</h2>
+        <div class="separator"></div>
+        <a href="#products" class="menu-item" onclick="showSection('productsSection')">Products</a>
+        <a href="#productStock" class="menu-item" onclick="showSection('stockSection')">Product Stock</a>
+        <a href="#logout" class="menu-item">Logout</a>
+    </div>
+    <div class="main" id="productsSection">
+        <h1>Stock Management</h1>
+        <div class="add-product">
+            <div>
+                <input type="text" id="productName" placeholder="Product Name" required>
+                <input type="date" id="productDate" required>
+            </div>
+            <div>
+                <input type="number" id="productQuantity" placeholder="Qty" required>
+                <input type="number" id="productPrice" placeholder="Price" required>
+                <input type="text" id="productNote" placeholder="Notes">
+            </div>
+            <button onclick="addProduct()">Add Product</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Date</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                    <th>Notes</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="stockTableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="main" id="stockSection">
+        <h1>Manage Stock</h1>
+
+        <div class="add-product">
+            <h3>Add Incoming Stock</h3>
+            <div>
+                <input type="text" id="incomingProductName" placeholder="Product Name" required>
+                <input type="number" id="incomingQuantity" placeholder="Qty" required>
+                <input type="text" id="incomingNote" placeholder="Notes">
+            </div>
+            <button onclick="addIncomingStock()">Add Incoming Stock</button>
+        </div>
+
+        <div class="add-product">
+            <h3>Add Outgoing Stock</h3>
+            <div>
+                <input type="text" id="outgoingProductName" placeholder="Product Name" required>
+                <input type="number" id="outgoingQuantity" placeholder="Qty" required>
+                <input type="text" id="outgoingNote" placeholder="Notes">
+            </div>
+            <button onclick="addOutgoingStock()">Add Outgoing Stock</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody id="stockManagementTableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const stockData = {};
+
+        function toggleMenu() {
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.classList.toggle('show');
+            });
+        }
+
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.main');
+            sections.forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(sectionId).style.display = 'block';
+        }
+
+        function addProduct() {
+            const productName = document.getElementById('productName').value;
+            const productDate = document.getElementById('productDate').value;
+            const productQuantity = parseInt(document.getElementById('productQuantity').value);
+            const productPrice = parseFloat(document.getElementById('productPrice').value);
+            const productNote = document.getElementById('productNote').value;
+
+            if (productName && productDate && productQuantity && productPrice) {
+                const total = productQuantity * productPrice;
+                const tableBody = document.getElementById('stockTableBody');
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${productName}</td><td>${productDate}</td><td>${productQuantity}</td><td>${productPrice.toFixed(2)}</td><td>${total.toFixed(2)}</td><td>${productNote}</td><td><button onclick="removeProduct(this)">Remove</button></td>`;
+                tableBody.appendChild(row);
+
+                // Initialize stock data
+                stockData[productName] = (stockData[productName] || 0) + productQuantity;
+
+                // Clear input fields
+                document.getElementById('productName').value = '';
+                document.getElementById('productDate').value = '';
+                document.getElementById('productQuantity').value = '';
+                document.getElementById('productPrice').value = '';
+                document.getElementById('productNote').value = '';
+            } else {
+                alert("Please fill in all required fields.");
+            }
+        }
+
+        function addIncomingStock() {
+            const productName = document.getElementById('incomingProductName').value;
+            const quantity = parseInt(document.getElementById('incomingQuantity').value);
+            const note = document.getElementById('incomingNote').value;
+
+            if (productName && quantity) {
+                const tableBody = document.getElementById('stockManagementTableBody');
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${productName}</td><td>${quantity}</td><td>${note}</td>`;
+                tableBody.appendChild(row);
+
+                // Update stock data
+                stockData[productName] = (stockData[productName] || 0) + quantity;
+
+                // Clear input fields
+                document.getElementById('incomingProductName').value = '';
+                document.getElementById('incomingQuantity').value = '';
+                document.getElementById('incomingNote').value = '';
+            } else {
+                alert("Please fill in all required fields.");
+            }
+        }
+
+        function addOutgoingStock() {
+            const productName = document.getElementById('outgoingProductName').value;
+            const quantity = parseInt(document.getElementById('outgoingQuantity').value);
+            const note = document.getElementById('outgoingNote').value;
+
+            if (productName && quantity) {
+                const tableBody = document.getElementById('stockManagementTableBody');
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${productName}</td><td>- ${quantity}</td><td>${note}</td>`;
+                tableBody.appendChild(row);
+
+                // Update stock data
+                if (stockData[productName] !== undefined) {
+                    stockData[productName] -= quantity;
+                }
+
+                // Clear input fields
+                document.getElementById('outgoingProductName').value = '';
+                document.getElementById('outgoingQuantity').value = '';
+                document.getElementById('outgoingNote').value = '';
+            } else {
+                alert("Please fill in all required fields.");
+            }
+        }
+
+        function removeProduct(button) {
+            const row = button.parentNode.parentNode;
+            const productName = row.cells[0].textContent;
+            const quantity = parseInt(row.cells[2].textContent);
+            row.parentNode.removeChild(row);
+
+            // Update stock data
+            if (stockData[productName] !== undefined) {
+                stockData[productName] -= quantity;
+            }
+        }
+    </script>
+</body>
+</html>
